@@ -1,5 +1,6 @@
 -- LÖVE functions
 
+local foxgloveGame = require("foxgloveGame")
 local ffi = require("ffi")
 
 local gameDir = "Games"
@@ -7,62 +8,10 @@ local games = {}
 local selectedGame = 1
 
 local identity = love.filesystem.getIdentity()
+local saveDirectory = love.filesystem.getSaveDirectory()
 local source = love.filesystem.getSource()
 
 local defaultKeypressed = love.keypressed
-
--- Add PhysicsFS function to add to the search path for launching games
-ffi.cdef("int PHYSFS_addToSearchPath(const char *newDir, int appendToPath);")
-
--- Removes the specified game from the search path and resets the identity
--- Should be called after setupGame with the same game passed to setupGame
---
--- @param game table The game that was setup earlier
-local function unsetGame(game)
-    love.filesystem.setIdentity(identity)
-    -- Removing from the search path is simply an unmount, no need for FFI here
-    love.filesystem.unmount(game.filepath)
-end
-
--- Adds the specified game to the search path, sets the identity to the game,
--- and runs the specified file from the game
---
--- If the setup fails, unsetGame will be called for you
---
--- @param game table The game to setup
--- @param file string The file to run
--- @return boolean If the setup was successful
-local function setupGame(game, file)
-    local gameFullPath =
-        love.filesystem.getSaveDirectory() .. "/" .. game.filepath
-
-    love.filesystem.setIdentity(game.identity or game.title)
-
-    -- Failed setup if adding the game to search path failed
-    if not ffi.C.PHYSFS_addToSearchPath(gameFullPath, 0) then
-        return false
-    end
-
-    -- Failed setup if the specified game does not contain the specified file,
-    -- and the file is instead found in this launcher's source
-    --
-    -- If the file does not exist anywhere,
-    -- that will be caught by love.filesystem.load
-    if love.filesystem.getRealDirectory(file) == source then
-        unsetGame(game)
-        return false
-    end
-
-    -- Failed setup if loading or running the file otherwise fails
-    local filefunc, err = love.filesystem.load(file)
-    if err or not pcall(filefunc) then
-        unsetGame(game)
-        return false
-    end
-
-    -- Success
-    return true
-end
 
 function love.load()
     love.filesystem.createDirectory(gameDir)
@@ -70,18 +19,18 @@ function love.load()
 
     -- Get the list of games
     for _, filename in ipairs(love.filesystem.getDirectoryItems(gameDir)) do
-        -- Create the default info/config table
-        local game = {
+        -- Create the default game
+        local game = foxgloveGame:new({
             title = filename,
             filepath = gameDir .. "/" .. filename
-        }
+        })
 
         -- Get the rest of the config
         love.conf = nil
-        if setupGame(game, "conf.lua") then
+        if game:setup("conf.lua") then
             pcall(love.conf, game)
-            unsetGame(game)
         end
+        game:unset()
 
         -- Finally, add the game to the games list
         table.insert(games, game)
@@ -152,7 +101,7 @@ function love.keypressed(key)
         local game = games[selectedGame]
         -- Run the actual game
         -- TODO: wrap around the game more to allow for better compatability
-        if setupGame(game, "main.lua") then
+        if game:setup("main.lua") then
             love.keypressed = defaultKeypressed
             love.load()
         end
