@@ -1,15 +1,10 @@
 -- LÖVE functions
 
 local foxgloveGame = require("foxgloveGame")
-local ffi = require("ffi")
 
 local gameDir = "Games"
 local games = {}
 local selectedGame = 1
-
-local identity = love.filesystem.getIdentity()
-local saveDirectory = love.filesystem.getSaveDirectory()
-local source = love.filesystem.getSource()
 
 local defaultKeypressed = love.keypressed
 
