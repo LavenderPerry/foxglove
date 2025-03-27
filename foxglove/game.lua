@@ -25,6 +25,12 @@ function Game:new(t)
         return
     end
 
+    -- Tables that may be modified by love.conf
+    -- See https://www.love2d.org/wiki/Config_Files
+    t.audio = t.audio or {}
+    t.window = t.window or {}
+    t.modules = t.modules or {}
+
     setmetatable(t, self)
     self.__index = self
     return t

@@ -106,7 +106,11 @@ function love.keypressed(key)
             return
         end
 
-        love.load()
+        if game.window.width and game.window.height then
+            love.window.setMode(game.window.width, game.window.height)
+        end
+
+        love.load({})
 
         local gameCallbacks = Callbacks:getCurrent()
         -- Wrap the quit callback to return to the launcher
@@ -114,6 +118,7 @@ function love.keypressed(key)
         --       perhaps use a separate module for this
         function love.quit()
             if not (gameCallbacks.quit and gameCallbacks.quit()) then
+                love.audio.stop() -- In case the game was playing audio
                 game:unset()
                 launcherCallbacks:apply()
             end
