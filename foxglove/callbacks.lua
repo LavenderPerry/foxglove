@@ -52,8 +52,8 @@ end
 
 -- Puts the callbacks into the love table, to apply them
 function Callbacks:apply()
-    for name, func in pairs(self) do
-        love[name] = func
+    for _, name in ipairs(self.names) do
+        love[name] = self[name]
     end
 end
 
