@@ -7,8 +7,9 @@ local gameDir = "Games"
 local games = {}
 local selectedGame = 1
 local launcherCallbacks
+local font
 
-function love.load()
+function love.load(_)
     launcherCallbacks = Callbacks:getCurrent()
 
     love.filesystem.createDirectory(gameDir)
@@ -36,6 +37,9 @@ function love.load()
     end
 
     love.conf = prevConf
+
+    -- Get the font for drawing
+    font = love.graphics.newFont("fonts/m6x11plus.ttf", 18, "none")
 end
 
 -- Draws text centered horizontally in the window
@@ -43,8 +47,6 @@ end
 -- @param text string The text to draw
 -- @param y number The y-value to draw at (multiplied by font line height)
 local function drawCenteredText(text, y)
-    local font = love.graphics.getFont()
-
     love.graphics.print(
         text,
         (love.graphics.getWidth() - font:getWidth(text)) / 2,
@@ -54,7 +56,8 @@ end
 
 -- TODO: actually good UI
 function love.draw()
-    love.graphics.setColor(1, 1, 1)
+    love.graphics.setFont(font)
+    love.graphics.setColor(0.8, 0.8, 0.8)
 
     -- Handle case when no games
     if #games == 0 then
@@ -64,11 +67,16 @@ function love.draw()
 
     -- Print out all games
     for i, game in ipairs(games) do
+        if i == selectedGame then
+            love.graphics.setColor(1, 1, 1)
+        end
         drawCenteredText(game.title, i * 3 - 1)
+        love.graphics.setColor(0.8, 0.8, 0.8)
     end
 
     -- Rectangle around selected game
-    local lineHeight = love.graphics.getFont():getHeight()
+    love.graphics.setColor(1, 1, 1)
+    local lineHeight = font:getHeight()
     love.graphics.rectangle(
         "line",
         lineHeight, lineHeight * (selectedGame * 3 - 2),
