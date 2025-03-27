@@ -107,7 +107,20 @@ function love.keypressed(key)
         end
 
         love.load()
-        -- TODO: wrap some of the callbacks for better compatability
+
+        local gameCallbacks = Callbacks:getCurrent()
+        -- Wrap the quit callback to return to the launcher
+        -- TODO: wrap more of the callbacks for better compatability
+        --       perhaps use a separate module for this
+        function love.quit()
+            if not (gameCallbacks.quit and gameCallbacks.quit()) then
+                game:unset()
+                launcherCallbacks:apply()
+            end
+
+            return true
+        end
+
         return
     end
 end
