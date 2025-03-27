@@ -2,22 +2,24 @@
 
 local ffi = require("ffi")
 
--- Standard values set for the launcher
-local identity = love.filesystem.getIdentity()
-local saveDirectory = love.filesystem.getSaveDirectory()
-local source = love.filesystem.getSource()
-
 -- Add PhysicsFS function to add to the search path for setGame
 ffi.cdef("int PHYSFS_addToSearchPath(const char *newDir, int appendToPath);")
 
-local foxgloveGame = {}
+local Game = {
+    -- Standard values set for the launcher
+    launcher = {
+        identity = love.filesystem.getIdentity(),
+        saveDirectory = love.filesystem.getSaveDirectory(),
+        source = love.filesystem.getSource()
+    }
+}
 
 -- Creates a new game
 -- Must specify t.filepath and t.title
 --
 -- @param t table The table to use
--- @return foxgloveGame
-function foxgloveGame:new(t)
+-- @return Game
+function Game:new(t)
     if type(t) ~= "table" or not t.filepath or not t.title then
         error("Invalid argument. Need table with 'filepath' and 'title' set.")
         return
@@ -33,8 +35,8 @@ end
 --
 -- @param file string The file to run
 -- @return boolean If setting up the game was successful or not
-function foxgloveGame:setup(file)
-    local gameFullPath = saveDirectory .. "/" .. self.filepath
+function Game:setup(file)
+    local gameFullPath = self.launcher.saveDirectory .. "/" .. self.filepath
 
     love.filesystem.setIdentity(self.identity or self.title)
 
@@ -48,7 +50,7 @@ function foxgloveGame:setup(file)
     --
     -- If the file does not exist anywhere,
     -- that will be caught by love.filesystem.load
-    if love.filesystem.getRealDirectory(file) == source then
+    if love.filesystem.getRealDirectory(file) == self.launcher.source then
         return false
     end
 
@@ -62,11 +64,11 @@ function foxgloveGame:setup(file)
 end
 
 -- Removes the game from the search path and resets the identity
--- Should be called after foxgloveGame:setup when done running the game
-function foxgloveGame:unset()
-    love.filesystem.setIdentity(identity)
+-- Should be called after Game:setup when done running the game
+function Game:unset()
+    love.filesystem.setIdentity(self.launcher.identity)
     -- Removing from the search path is simply an unmount, no need for FFI here
     love.filesystem.unmount(self.filepath)
 end
 
-return foxgloveGame
+return Game

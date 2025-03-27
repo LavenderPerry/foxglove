@@ -1,34 +1,38 @@
 -- LÖVE functions
 
-local foxgloveGame = require("foxgloveGame")
+local Game = require("foxglove.game")
+local Callbacks = require("foxglove.callbacks")
 
 local gameDir = "Games"
 local games = {}
 local selectedGame = 1
-
-local defaultKeypressed = love.keypressed
+local launcherCallbacks
 
 function love.load()
+    launcherCallbacks = Callbacks:getCurrent()
+
     love.filesystem.createDirectory(gameDir)
     local prevConf = love.conf
 
     -- Get the list of games
     for _, filename in ipairs(love.filesystem.getDirectoryItems(gameDir)) do
         -- Create the default game
-        local game = foxgloveGame:new({
+        local game = Game:new({
             title = filename,
             filepath = gameDir .. "/" .. filename
         })
 
-        -- Get the rest of the config
-        love.conf = nil
-        if game:setup("conf.lua") then
-            pcall(love.conf, game)
-        end
-        game:unset()
+        if game then
+            -- Get the rest of the config
+            love.conf = nil
+            if game:setup("conf.lua") then
+                pcall(love.conf, game)
+            end
+            game:unset()
 
-        -- Finally, add the game to the games list
-        table.insert(games, game)
+            -- Finally, add the game to the games list
+            table.insert(games, game)
+        end
     end
 
     love.conf = prevConf
@@ -94,20 +98,16 @@ function love.keypressed(key)
 
     if key == "space" then -- Launch selected game
         local game = games[selectedGame]
-        -- Run the actual game
-        -- TODO: wrap around the game more to allow for better compatability
-        if game:setup("main.lua") then
-            love.keypressed = defaultKeypressed
-            love.load()
+
+        Callbacks.default:apply()
+        if not game:setup("main.lua") then
+            -- TODO: handle error
+            launcherCallbacks:apply()
+            return
         end
+
+        love.load()
+        -- TODO: wrap some of the callbacks for better compatability
         return
     end
 end
-
--- TODO: if quit in a game, call the game's love.quit and return to the launcher
---function love.quit()
---    -- Unmount the mounted games
---    for _, game in ipairs(games) do
---        love.filesystem.unmount(game.path.file)
---    end
---end
