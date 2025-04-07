@@ -1,5 +1,7 @@
 -- Handling LÖVE callbacks
 
+--- @class Callbacks
+--- @field new function
 local Callbacks = {
     -- List of all callbacks used in the framework
     -- See https://www.love2d.org/wiki/love#Callbacks
@@ -28,10 +30,10 @@ local Callbacks = {
     }
 }
 
--- Creates a Callbacks object from a table of callbacks
---
--- @param t table The table to use
--- @return Callbacks
+--- Creates a Callbacks object from a table of callbacks
+---
+--- @param t table The table to use
+--- @return Callbacks
 function Callbacks:new(t)
     t = t or {}
     setmetatable(t, self)
@@ -39,9 +41,9 @@ function Callbacks:new(t)
     return t
 end
 
--- Returns the current callbacks in a table
---
--- @return Callbacks
+--- Returns the current callbacks in a table
+---
+--- @return Callbacks
 function Callbacks:getCurrent()
     local res = self:new()
     for _, name in ipairs(self.names) do
@@ -50,15 +52,15 @@ function Callbacks:getCurrent()
     return res
 end
 
--- Puts the callbacks into the love table, to apply them
+--- Puts the callbacks into the love table, to apply them
 function Callbacks:apply()
     for _, name in ipairs(self.names) do
         love[name] = self[name]
     end
 end
 
--- Default callbacks
--- This file must be required before any callbacks are changed for this to work
+--- Default callbacks
+--- This file must be required before any callbacks are changed for this to work
 Callbacks.default = Callbacks:getCurrent()
 
 return Callbacks
