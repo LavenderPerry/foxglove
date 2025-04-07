@@ -11,7 +11,7 @@ ffi.cdef("int PHYSFS_addToSearchPath(const char *newDir, int appendToPath);")
 --- @field title string
 --- @field filepath string
 --- @field fullpath string
---- @field identity string
+--- @field identity string | nil
 local Game = {
     dir = "Games",
     iconDir = "Icons",
@@ -27,7 +27,6 @@ function Game:new(filename)
 
     local res = {
         title = filename,
-        identity = filename,
         filepath = gamepath,
         fullpath = path.join(path.saveDirectory, gamepath),
 
