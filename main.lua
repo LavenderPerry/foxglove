@@ -20,7 +20,9 @@ function love.keypressed(...)
     -- Keypress could have triggered launcher to launch a game
     local game = Launcher.launchedGame
     if game ~= nil then
+        love.graphics.reset()
         Callbacks.default:apply()
+
         if not game:setup("main.lua") then
             -- TODO: handle error
             normalCallbacks:apply()

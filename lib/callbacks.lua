@@ -27,7 +27,11 @@ local Callbacks = {
 
         -- Touch
         "touchmoved", "touchpressed", "touchreleased"
-    }
+    },
+
+    -- Function to avoid setting callbacks to nil (causing segfault)
+    -- See Callbacks:apply()
+    dummyFunc = function(...) end
 }
 
 --- Creates a Callbacks object from a table of callbacks
@@ -55,7 +59,11 @@ end
 --- Puts the callbacks into the love table, to apply them
 function Callbacks:apply()
     for _, name in ipairs(self.names) do
-        love[name] = self[name]
+        if love[name] ~= nil and self[name] == nil then
+            love[name] = self.dummyFunc -- Avoid segfault from missing callback
+        else
+            love[name] = self[name]
+        end
     end
 end
 
