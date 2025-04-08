@@ -3,15 +3,33 @@
 local Callbacks = require("lib.callbacks")
 local Launcher = require("lib.launcher")
 
+-- All canvas stuff is for testing only
+local canvas = love.graphics.newCanvas(320, 240)
+
 local normalCallbacks
 
 function love.load(_)
+    love.mouse.setVisible(false)
+
     normalCallbacks = Callbacks:getCurrent()
     Launcher:getGames()
 end
 
 function love.draw()
-    Launcher:draw()
+    local width = love.graphics.getWidth()
+    local height = love.graphics.getHeight()
+    if width == 1920 and height == 1080 then
+        love.graphics.setCanvas(canvas)
+        love.graphics.clear()
+
+        Launcher:draw()
+
+        love.graphics.setCanvas()
+        love.graphics.setColor(1, 1, 1)
+        love.graphics.draw(canvas, 240, 0, 0, 4.5, 4.5)
+    else
+        Launcher:draw()
+    end
 end
 
 function love.keypressed(...)
@@ -27,10 +45,6 @@ function love.keypressed(...)
             -- TODO: handle error
             normalCallbacks:apply()
             return
-        end
-
-        if game.window.width and game.window.height then
-            love.window.setMode(game.window.width, game.window.height)
         end
 
         -- Run the game's load function, with empty arguments list

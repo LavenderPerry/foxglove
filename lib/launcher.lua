@@ -6,6 +6,7 @@ local Game = require("lib.launcher.game")
 --- @class Launcher
 local Launcher = {
     noGames = true, -- Is set to false if Launcher:loadGames() loads any games
+    scrollable = false, -- Set to true if Launcher:loadGames() loads > 3 games
     settingsSelected = true,
     gameSelected = 1,
 
@@ -51,6 +52,10 @@ function Launcher:getGames()
     if #self.games ~= 0 then
         self.noGames = false
         self.settingsSelected = false
+        if #self.games > 3 then
+            self.scrollable = true
+            self.arrowIcon = drawing.loadImage("arrow.png")
+        end
 
         self:loadGamesOnscreen()
     end
@@ -70,6 +75,11 @@ function Launcher:draw()
             (love.graphics.getWidth() - drawing.font:getWidth(text)) / 2, 148
         )
     else
+        if self.scrollable then
+            love.graphics.draw(self.arrowIcon,   8, 64)
+            love.graphics.draw(self.arrowIcon, 312, 64, 0, -1, 1)
+        end
+
         for game, i in self:gamesOnscreen() do
             local gameX = 32 + 96 * i
             love.graphics.draw(
