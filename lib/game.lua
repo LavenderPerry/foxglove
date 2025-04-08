@@ -46,17 +46,14 @@ function Game:new(filename)
     if res:setup("conf.lua") then
         pcall(love.conf, res)
     end
-
-    -- Load the icon while the game is setup (to fallback on configured icon)
-    local iconPath = path.join(self.iconDir, filename .. ".png")
-    if path.exists(iconPath) then
-        res.launcherIcon = love.graphics.newImage(iconPath)
-    elseif res.icon ~= nil then
-        res.launcherIcon = love.graphics.newImage(res.icon)
-    end
-
     res:unset()
     love.conf = prevConf
+
+    -- Get the icon if it exists
+    local iconPath = path.join(self.iconDir, res.title .. ".png")
+    if path.exists(iconPath) then
+        res.launcherIcon = love.graphics.newImage(iconPath)
+    end
 
     return res
 end

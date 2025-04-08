@@ -10,6 +10,7 @@ local normalCallbacks
 
 function love.load(_)
     love.mouse.setVisible(false)
+    love.graphics.setDefaultFilter("nearest")
 
     normalCallbacks = Callbacks:getCurrent()
     Launcher:getGames()

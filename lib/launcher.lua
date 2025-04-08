@@ -1,7 +1,7 @@
 -- Main launcher menu
 
 local drawing = require("lib.drawing")
-local Game = require("lib.launcher.game")
+local Game = require("lib.game")
 
 --- @class Launcher
 local Launcher = {
