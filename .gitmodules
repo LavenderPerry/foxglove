@@ -1,3 +1,6 @@
 [submodule "linux"]
 	path = linux
 	url = https://github.com/raspberrypi/linux.git
+[submodule "rpi-firmware"]
+	path = rpi-firmware
+	url = https://github.com/raspberrypi/rpi-firmware.git

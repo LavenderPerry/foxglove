@@ -138,7 +138,24 @@ CROSS_COMPILE=$prev_CROSS_COMPILE
 export CROSS_COMPILE
 
 #
-# 3. Cleanup
+# 3. Add proprietary firmware
+#
+# At some point I could try unofficial open source firmware but for now,
+# download the binaries of the official firmware
+#
+
+# Download the firmware binaries
+repo="raspberrypi/firmware"
+commit="effea745e592ec8a97fc54093a5673a7e6e515c9"
+for binary in bootcode.bin fixup.dat start.elf; do
+    curl https://github.com/$repo/raw/$commit/boot/$binary -o $bootdir/$binary
+done
+
+# Verify the downloaded files, exits on failure
+sha256sum -c proprietary-firmware-hashes.sha256
+
+#
+# 4. Cleanup
 #
 
 # Restore MAKEFLAGS to whatever it was before this script

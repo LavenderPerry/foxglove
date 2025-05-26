@@ -1,0 +1,3 @@
+b7f7faf1a1c6957e2abb79b5a5171eea7e75de60745481ab9c3890801619cef9  out/boot/bootcode.bin
+35b72b06f658102d1eee57c29fde503e4a590edd280a314ab69874ca9ea5233b  out/boot/fixup.dat
+ab505256b80c54a8c34684156e2146ebd373a389cd1b95a4d6accdc54b7f93a5  out/boot/start.elf

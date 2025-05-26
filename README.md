@@ -24,9 +24,8 @@ git submodule update --init --recursive
 
 Currently, the only thing working so far is compiling the kernel.
 
-I haven't even established a proper build system set.
-
-But if you really want to build this, inspect `build.sh`
+I haven't even established a proper build system,
+but if you really want to build this, inspect `build.sh`
 (but don't just blindly run it!).
 
 ## Running
