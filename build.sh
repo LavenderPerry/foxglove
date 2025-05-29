@@ -1,14 +1,12 @@
 #!/bin/sh -e
 
 #
-# Build script for the rootfs
+# Build script for Foxglove OS
 # For now just tries to do all the commands I ran to get it working,
 # and serves as documentation
 # as well as a recovery process in case I somehow lose all my progress.
-# Eventually I will have a proper Makefile or something for all this,
+# Eventually I might have a proper Makefile or something for all this,
 # or use a tool like buildroot or Yocto.
-# The only reason I'm doing this all manually now instead of using one of those
-# tools is to improve my own understanding of the process.
 #
 
 #
@@ -57,10 +55,16 @@ sleep 3
 # 1. Setup environment
 #
 
-# Specify and make output directories
-# Just boot for now, until I get more stuff built
-bootdir=out/boot
-mkdir -p $bootdir
+# Script-wide variables
+privesc=sudo
+outname=foxglove-$(date -u +%Y%m%d)
+repodir=$PWD
+buildir=$repodir/build
+rootdir=$buildir/$outname
+bootdir=$rootdir/boot
+
+# Make directories for rootfs
+mkdir -p "$bootdir"
 
 # Set the number of threads make will use.
 #
@@ -86,8 +90,6 @@ export MAKEFLAGS
 # https://www.kernel.org/doc/html/latest/admin-guide/README.html
 #
 
-# Set the working directory to the repository containing
-# Raspberry Pi's fork of the Linux kernel (assuming submodules are initialized).
 cd linux
 
 # Save original values of the variables exported here, to restore later
@@ -108,7 +110,6 @@ prev_CROSS_COMPILE=$CROSS_COMPILE
 configtask=bcmrpi_defconfig
 kernel=kernel
 image=zImage
-installdir=../$bootdir
 export ARCH=arm
 export CROSS_COMPILE=arm-none-eabi-
 
@@ -124,18 +125,11 @@ patch .config < ../linux-.config.patch
 make $image modules dtbs
 
 # Install the kernel
-make INSTALL_MOD_PATH=$installdir modules_install
-cp arch/$ARCH/boot/$image $installdir/$kernel.img
-cp arch/$ARCH/boot/dts/broadcom/*.dtb $installdir
-cp arch/$ARCH/boot/dts/overlays/*.dtb* $installdir/overlays
-cp arch/$ARCH/boot/dts/overlays/README $installdir/overlays
-
-# Restore environment to how it was before building/installing the kernel
-cd ..
-ARCH=$prev_ARCH
-export ARCH
-CROSS_COMPILE=$prev_CROSS_COMPILE
-export CROSS_COMPILE
+make "INSTALL_MOD_PATH=$rootdir" modules_install
+cp arch/$ARCH/boot/$image "$bootdir/$kernel.img"
+cp arch/$ARCH/boot/dts/broadcom/*.dtb "$bootdir"
+cp arch/$ARCH/boot/dts/overlays/*.dtb* "$bootdir/overlays"
+cp arch/$ARCH/boot/dts/overlays/README "$bootdir/overlays"
 
 #
 # 3. Add proprietary firmware
@@ -144,20 +138,89 @@ export CROSS_COMPILE
 # download the binaries of the official firmware
 #
 
+cd "$bootdir"
+
 # Download the firmware binaries
 repo="raspberrypi/firmware"
 commit="effea745e592ec8a97fc54093a5673a7e6e515c9"
 for binary in bootcode.bin fixup.dat start.elf; do
-    curl https://github.com/$repo/raw/$commit/boot/$binary -o $bootdir/$binary
+    curl https://raw.githubusercontent.com/$repo/$commit/boot/$binary -o $binary
 done
 
 # Verify the downloaded files, exits on failure
-sha256sum -c proprietary-firmware-hashes.sha256
+sha256sum -c "$repodir/proprietary-firmware-hashes.sha256"
 
 #
-# 4. Cleanup
+# 4. Create compressed rootfs and disk image
+#
+# Much of this part uses Void Linux's mkimage and mkrootfs scripts as reference:
+# https://github.com/void-linux/void-mklive/blob/906652a/mkimage.sh
+# https://github.com/void-linux/void-mklive/blob/906652a/mkrootfs.sh
 #
 
-# Restore MAKEFLAGS to whatever it was before this script
+cd "$buildir"
+
+# Create the compressed rootfs
+tarfile="$outname.tar.xz"
+tar cp --posix \
+    --group=root --owner=root \
+    --xattrs --xattrs-include='*' \
+    -C "$rootdir" . | xz -T0 -9 > "$tarfile"
+
+# Sizes in disk sectors
+reserve=2048
+bootsize=32768 # 16mb, but may want to increase later... recommended is 256mb
+read -r rootsize _ <<ENDCMD
+$(du -B 512 -s --exclude=boot "$rootdir")
+ENDCMD
+fullsize=$((reserve + bootsize + rootsize))
+
+# Create the image file and mount point to edit it
+imagedir=$(mktemp -d)
+imageboot=$imagedir/boot
+imagefile=$outname.img
+truncate -s $((fullsize * 512)) "$imagefile"
+
+# Create the partitions
+sfdisk "$imagefile" <<ENDINPUT
+label: dos
+$reserve,$bootsize,b,*
+,+,L
+ENDINPUT
+
+# Create the file systems
+loopdev=$($privesc losetup --show --find --partscan "$imagefile")
+p1="${loopdev}p1"
+p2="${loopdev}p2"
+$privesc mkfs.vfat -I -F16 "$p1"
+$privesc mkfs.ext4 -O ^has_journal "$p2"
+
+# Mount the partitions
+$privesc mount "$p2" "$imagedir"
+$privesc mkdir -p "$imageboot"
+$privesc mount "$p1" "$imageboot"
+
+# Extract the compressed rootfs onto the image
+$privesc tar xfp "$tarfile" --xattrs --xattrs-include='*' -C "$imagedir"
+
+# Unmount directories and deconfigure loop device
+$privesc umount -R "$imagedir"
+$privesc losetup -d "$loopdev"
+rmdir "$imagedir" || echo "WARNING: $imagedir not empty after unmount"
+
+# Compress the image
+xz -T0 -9 "$imagefile"
+
+#
+# 5. Cleanup
+#
+
+cd "$repodir"
+
+# Restore environment to whatever it was before this script
+ARCH=$prev_ARCH
+export ARCH
+CROSS_COMPILE=$prev_CROSS_COMPILE
+export CROSS_COMPILE
 MAKEFLAGS=$prev_MAKEFLAGS
 export MAKEFLAGS
