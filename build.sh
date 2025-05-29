@@ -170,32 +170,37 @@ tar cp --posix \
 # Sizes in disk sectors
 reserve=2048
 bootsize=32768 # 16mb, but may want to increase later... recommended is 256mb
+# rootsize is set to the size of all files that will be on root partition
 read -r rootsize _ <<ENDCMD
 $(du -B 512 -s --exclude=boot "$rootdir")
 ENDCMD
 fullsize=$((reserve + bootsize + rootsize))
 
-# Create the image file and mount point to edit it
-imagedir=$(mktemp -d)
-imageboot=$imagedir/boot
+# Create the image file
 imagefile=$outname.img
 truncate -s $((fullsize * 512)) "$imagefile"
 
 # Create the partitions
 sfdisk "$imagefile" <<ENDINPUT
 label: dos
-$reserve,$bootsize,b,*
-,+,L
+start=$reserve, size=$bootsize, type=b, bootable
+start=        , size=+        , type=L
 ENDINPUT
 
-# Create the file systems
+# Configure the loopback device to access the partitions
 loopdev=$($privesc losetup --show --find --partscan "$imagefile")
 p1="${loopdev}p1"
 p2="${loopdev}p2"
+
+# Make the filesystems
 $privesc mkfs.vfat -I -F16 "$p1"
 $privesc mkfs.ext4 -O ^has_journal "$p2"
 
-# Mount the partitions
+# Create a temporary directory for mounting the partitions
+imagedir=$(mktemp -d)
+imageboot=$imagedir/boot
+
+# Mount the image partitions
 $privesc mount "$p2" "$imagedir"
 $privesc mkdir -p "$imageboot"
 $privesc mount "$p1" "$imageboot"
@@ -203,7 +208,7 @@ $privesc mount "$p1" "$imageboot"
 # Extract the compressed rootfs onto the image
 $privesc tar xfp "$tarfile" --xattrs --xattrs-include='*' -C "$imagedir"
 
-# Unmount directories and deconfigure loop device
+# Unmount image partitions and deconfigure loop device
 $privesc umount -R "$imagedir"
 $privesc losetup -d "$loopdev"
 rmdir "$imagedir" || echo "WARNING: $imagedir not empty after unmount"
