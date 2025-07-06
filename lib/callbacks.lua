@@ -1,5 +1,7 @@
 -- Handling LÖVE callbacks
 
+local utils = require("lib.utils")
+
 --- @class Callbacks
 --- @field new function
 local Callbacks = {
@@ -27,11 +29,7 @@ local Callbacks = {
 
         -- Touch
         "touchmoved", "touchpressed", "touchreleased"
-    },
-
-    -- Function to avoid setting callbacks to nil (causing segfault)
-    -- See Callbacks:apply()
-    dummyFunc = function(...) end
+    }
 }
 
 --- Creates a Callbacks object from a table of callbacks
@@ -60,7 +58,7 @@ end
 function Callbacks:apply()
     for _, name in ipairs(self.names) do
         if love[name] ~= nil and self[name] == nil then
-            love[name] = self.dummyFunc -- Avoid segfault from missing callback
+            love[name] = utils.dummyFunc -- Avoid segfault from missing callback
         else
             love[name] = self[name]
         end

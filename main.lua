@@ -1,10 +1,13 @@
 -- LÖVE functions
 
+require("lib.monkeypatch")
+
 local Callbacks = require("lib.callbacks")
 local Launcher = require("lib.launcher")
+local utils = require("lib.utils")
 
 -- All canvas stuff is for testing only
-local canvas = love.graphics.newCanvas(320, 240)
+local canvas = love.graphics.newCanvas(utils.screenWidth, utils.screenHeight)
 
 local normalCallbacks
 
