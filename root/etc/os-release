@@ -1,0 +1,11 @@
+NAME=Foxglove
+ID=foxglove
+PRETTY_NAME="Foxglove OS"
+ANSI_COLOR="0;35"
+VENDOR_NAME="Lavender Perry"
+VEMDOR_URL="https://lavender.nekoweb.org"
+RELEASE_TYPE=development
+HOME_URL="https://codeberg.org/elle/foxglove-os"
+BUG_REPORT_URL="https://codeberg.org/elle/foxglove-os/issues"
+DEFAULT_HOSTNAME=foxglove
+ARCHITECTURE=arm
