@@ -1,6 +1,7 @@
 -- Main launcher menu
 
 local drawing = require("lib.drawing")
+local utils = require("lib.utils")
 local Game = require("lib.game")
 
 --- @class Launcher
@@ -65,14 +66,14 @@ end
 function Launcher:draw()
     drawing.setup()
 
-    love.graphics.draw(self.settingsIcon, 272, 16)
+    love.graphics.draw(self.settingsIcon, 544, 32) -- TODO: more icons like this
 
     -- Draw the games (or indicate no games)
     if self.noGames then
         local text = "No games"
         love.graphics.print(
             text,
-            (love.graphics.getWidth() - drawing.font:getWidth(text)) / 2, 148
+            (utils.screenWidth - drawing.font:getWidth(text)) / 2, 148
         )
     else
         if self.scrollable then
