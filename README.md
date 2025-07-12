@@ -1,6 +1,7 @@
 # Foxglove OS
 
-The operating system for the Foxglove handheld video game system.
+The operating system and application
+for the Foxglove handheld video game system.
 
 Uses the Linux kernel, made for Raspberry Pi.
 
@@ -19,11 +20,14 @@ so use a virtual machine that emulates it (or real hardware if you want).
 ## Files
 
 * `build.sh`: The build script, outputs an image and rootfs.
-* `root/`: All the files that are used unmodified in the final image/rootfs.
+* `sysroot/`: All the files that are used unmodified in the final image/rootfs.
+* `launcher/`: The launcher application files used by Foxglove.
+Also added to the end result. See `launcher/README.md` for more information.
 * `linux-.config.patch`: The difference between the Linux kernel's default
 generated build configuration and Foxglove's kernel build configuration.
 It is very small right now, but will grow as development continues.
 
 ## License
 
-This repository is licensed under the zlib license, viewable at `LICENSE.txt`.
+This repository and everything in it is licensed under the zlib license,
+viewable at `LICENSE.txt`.
