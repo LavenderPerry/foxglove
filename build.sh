@@ -40,11 +40,13 @@ PATH=$crosdir/bin:$PATH
 # Also get the firmware binaries.
 #
 
+get() {
+    curl -o "$1.tar.$3" "$4"
+    echo "$1-$2"
+}
+
 ghget() {
-    base="${1##*/}"
-    name="$base-${2##*/}"
-    curl -o "$base.tar.gz" "https://codeload.github.com/$1/tar.gz/$2"
-    echo "$name"
+    get "${1##*/}" "${2##*/}" gz "https://codeload.github.com/$1/tar.gz/$2"
 }
 
 mkdir -p "$srcsdir"
@@ -53,8 +55,18 @@ cd "$srcsdir"
 # Source code
 mussel="$(ghget firasuke/mussel 95dec40aee2077aa703b7abc7372ba4d34abb889)"
 linux="$(ghget raspberrypi/linux refs/tags/stable_20250428)"
-musseldir="$srcsdir/$mussel"
-linuxdir="$srcsdir/$linux"
+sdl="$(ghget libsdl-org/SDL refs/tags/release-3.2.18)"
+mesa="$(get mesa 25.1.6 xz https://archive.mesa3d.org/mesa-25.1.6.tar.xz)"
+openal="$(ghget kcat/openal-soft refs/tags/1.24.3)"
+lua="$(get lua 5.4.8 gz https://www.lua.org/ftp/lua-5.4.8.tar.gz)"
+cffilua="$(ghget q66/cffi-lua refs/tags/v0.2.3)"
+freetype="$(get freetype 2.13.3 gz https://download.savannah.gnu.org/releases/freetype/freetype-2.13.3.tar.gz)"
+harfbuzz="$(ghget harfbuzz/harfbuzz refs/tags/11.2.1)"
+modplug="$(get libmodplug 0.8.9.0 gz https://psychz.dl.sourceforge.net/project/modplug-xmms/libmodplug/0.8.9.0/libmodplug-0.8.9.0.tar.gz)"
+ogg="$(ghget xiph/ogg refs/tags/v1.3.6)"
+vorbis="$(ghget xiph/vorbis refs/tags/v1.3.7)"
+theora="$(ghget xiph/theora refs/tags/v1.2.0)"
+love="$(ghget love2d/love 201dc2ae4602737ba1999701d6f7abb580ab323b)"
 
 # Proprietary firmware binaries
 repo="raspberrypi/firmware"
@@ -67,7 +79,7 @@ done
 sha256sum -c "$repodir/sources.sha256"
 
 # Extract sources
-for src in *.tar.gz; do tar xf "$src"; done
+for src in *.tar.*; do tar xf "$src"; done
 
 #
 # Make the cross compiler for building the rest of the operating system.
@@ -77,8 +89,8 @@ for src in *.tar.gz; do tar xf "$src"; done
 
 cd "$buildir"
 
-"$musseldir/check"
-"$musseldir/mussel" "$ccarch" -l -p
+"$srcsdir/$mussel/check"
+"$srcsdir/$mussel/mussel" "$ccarch" -l -p
 
 #
 # Build the Linux kernel.
@@ -89,7 +101,7 @@ cd "$buildir"
 
 buildmk() { make -j"$threads" ARCH="$arch" CROSS_COMPILE="$target-" "$@"; }
 
-cd "$linuxdir"
+cd "$srcsdir/$linux"
 
 # Clean the source tree.
 # Might not be needed, but still recommended before every kernel build
@@ -150,11 +162,13 @@ $privesc mount "$p1" "$imageboot"
 $privesc cp -r "$rootdir" "$imagedir"
 
 # Add the Linux kernel files
-$privesc make -C "$linuxdir" "INSTALL_MOD_PATH=$imagedir" modules_install
-$privesc cp "$linuxdir"/arch/arm/boot/zImage "$imageboot"
-$privesc cp "$linuxdir"/arch/arm/boot/dts/broadcom/*.dtb "$imageboot"
-$privesc cp "$linuxdir"/arch/arm/boot/dts/overlays/*.dtb* "$imageboot/overlays"
-$privesc cp "$linuxdir"/arch/arm/boot/dts/overlays/README "$imageboot/overlays"
+$privesc make -C "$srcsdir/$linux" "INSTALL_MOD_PATH=$imagedir" modules_install
+$privesc cp "$srcsdir/$linux"/arch/arm/boot/zImage "$imageboot"
+$privesc cp "$srcsdir/$linux"/arch/arm/boot/dts/broadcom/*.dtb "$imageboot"
+$privesc cp "$srcsdir/$linux"/arch/arm/boot/dts/overlays/*.dtb* \
+    "$imageboot/overlays"
+$privesc cp "$srcsdir/$linux"/arch/arm/boot/dts/overlays/README \
+    "$imageboot/overlays"
 
 # Copy the firmware
 $privesc cp "$srcsdir/bootcode.bin" "$imageboot"
