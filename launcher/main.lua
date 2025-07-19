@@ -4,10 +4,7 @@ require("lib.monkeypatch")
 
 local Callbacks = require("lib.callbacks")
 local Launcher = require("lib.launcher")
-local utils = require("lib.utils")
-
--- All canvas stuff is for testing only
-local canvas = love.graphics.newCanvas(utils.screenWidth, utils.screenHeight)
+local drawing = require("lib.drawing")
 
 local normalCallbacks
 
@@ -20,20 +17,10 @@ function love.load(_)
 end
 
 function love.draw()
-    local width = love.graphics.getWidth()
-    local height = love.graphics.getHeight()
-    if width == 1920 and height == 1080 then
-        love.graphics.setCanvas(canvas)
-        love.graphics.clear()
+    drawing:setup()
 
-        Launcher:draw()
-
-        love.graphics.setCanvas()
-        love.graphics.setColor(1, 1, 1)
-        love.graphics.draw(canvas, 240, 0, 0, 4.5, 4.5)
-    else
-        Launcher:draw()
-    end
+    -- TODO: handling for multiple screens
+    Launcher:draw()
 end
 
 function love.keypressed(...)

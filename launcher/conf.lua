@@ -1,11 +1,11 @@
 -- Configuration
 
-local utils = require("lib.utils")
+local drawing = require("lib.drawing")
 
 function love.conf(t)
     t.title = "Foxglove"
     t.identity = t.title
 
-    t.window.width = utils.screenWidth
-    t.window.height = utils.screenHeight
+    t.window.width = drawing.screenWidth
+    t.window.height = drawing.screenHeight
 end

@@ -1,17 +1,18 @@
 -- Monkey patches the LÖVE framework to work with the launcher
 
-local utils = require("lib.utils")
+local callbacks = require("lib.callbacks")
+local drawing = require("lib.drawing")
 
 -- love.graphics
 
-local prevSetCanvas = love.graphics.setCanvas
-function love.graphics.setCanvas(canvas, mipmap)
-    if mipmap then return prevSetCanvas(canvas, mipmap) end
-    if canvas then return prevSetCanvas(canvas) end
-
-    -- TODO: set to wrapper canvas if there is an active game
-    return prevSetCanvas() -- temporary
-end
+--local prevSetCanvas = love.graphics.setCanvas
+--function love.graphics.setCanvas(canvas, mipmap)
+--    if mipmap then return prevSetCanvas(canvas, mipmap) end
+--    if canvas then return prevSetCanvas(canvas) end
+--
+--    -- TODO: set to wrapper canvas if there is an active game
+--    return prevSetCanvas() -- temporary
+--end
 
 -- love.window
 -- This deals with the fact that there is no real window system
@@ -24,7 +25,7 @@ function love.window.close()
     error("Closing the window is not supported by Foxglove!", 2)
 end
 
-love.window.maximize = utils.dummyFunc
+love.window.maximize = callbacks.noop
 
 -- Minimizing is the same thing as closing on this console
 love.window.minimize = love.window.close
@@ -44,7 +45,7 @@ function love.window.setMode(width, height, settings)
         settings.minwidth = nil
         settings.minheight = nil
     end
-    prevSetMode(utils.screenWidth, utils.screenHeight, settings)
+    prevSetMode(drawing.screenWidth, drawing.screenHeight, settings)
 end
 
 local prevUpdateMode = love.window.updateMode
@@ -54,8 +55,8 @@ function love.window.updateMode(width, height, settings)
         settings.minwidth = nil
         settings.minheight = nil
     end
-    prevUpdateMode(utils.screenWidth, utils.screenHeight, settings)
+    prevUpdateMode(drawing.screenWidth, drawing.screenHeight, settings)
 end
 
 -- TODO: restrict access games have to os functions, such as os.exit()
---       os.exit() should quit the game if a game is running instead
+--       It may be better to do this on a lower level through the Lua C library

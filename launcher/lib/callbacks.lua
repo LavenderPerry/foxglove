@@ -1,7 +1,5 @@
 -- Handling LÖVE callbacks
 
-local utils = require("lib.utils")
-
 --- @class Callbacks
 --- @field new function
 local Callbacks = {
@@ -32,8 +30,10 @@ local Callbacks = {
     }
 }
 
+--- Does nothing
+function Callbacks.noop(...) end
+
 --- Creates a Callbacks object from a table of callbacks
----
 --- @param t table The table to use
 --- @return Callbacks
 function Callbacks:new(t)
@@ -44,7 +44,6 @@ function Callbacks:new(t)
 end
 
 --- Returns the current callbacks in a table
----
 --- @return Callbacks
 function Callbacks:getCurrent()
     local res = self:new()
@@ -58,7 +57,7 @@ end
 function Callbacks:apply()
     for _, name in ipairs(self.names) do
         if love[name] ~= nil and self[name] == nil then
-            love[name] = utils.dummyFunc -- Avoid segfault from missing callback
+            love[name] = self.noop -- Avoid segfault from missing callback
         else
             love[name] = self[name]
         end

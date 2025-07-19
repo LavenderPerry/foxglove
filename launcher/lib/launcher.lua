@@ -1,16 +1,14 @@
 -- Main launcher menu
 
 local drawing = require("lib.drawing")
-local utils = require("lib.utils")
 local Game = require("lib.game")
 
---- @class Launcher
-local Launcher = {
-    noGames = true, -- Is set to false if Launcher:loadGames() loads any games
-    scrollable = false, -- Set to true if Launcher:loadGames() loads > 3 games
+local launcher = {
+    noGames = true, -- Is set to false if launcher:getGames() loads any games
+    scrollable = false, -- Set to true if launcher:getGames() loads > 3 games
     settingsSelected = true,
     gameSelected = 1,
-
+    gameIconSize = 128,
     settingsIcon = drawing.loadImage("settings.png"),
     selectIcon = drawing.loadImage("select.png")
 }
@@ -19,13 +17,14 @@ local Launcher = {
 --- Iierator over each game currently on screen,
 --- giving game, index (0-2) and index (total in list)
 --- @return function
-function Launcher:gamesOnscreen()
+function launcher:gamesOnscreen()
+    -- TODO: delete this and make a proper carousel
     local firstGameIdx = self.gameSelected > 2 and self.gameSelected - 2 or 1
     local i = -1
     return function()
         i = i + 1
 
-        if i == 3 then return nil end
+        if i == 4 then return nil end
 
         local idx = firstGameIdx + i
         local game = self.games[idx]
@@ -37,7 +36,8 @@ end
 
 --- @package
 --- Load the games currently on screen, if they are not already loaded
-function Launcher:loadGamesOnscreen()
+function launcher:getGamesOnscreen()
+    -- TODO: stop lazy-loading, better to have slow startup than lag
     for game, _, i in self:gamesOnscreen() do
         if type(game) == "string" then
             self.games[i] = Game:new(game)
@@ -46,8 +46,9 @@ function Launcher:loadGamesOnscreen()
 end
 
 --- Gets and stores the game filenames, loading the first three
---- Must be called before Launcher:draw()
-function Launcher:getGames()
+--- Must be called before launcher:draw()
+function launcher:getGames()
+    -- TODO: stop lazy-loading, better to have slow startup than lag
     self.games = love.filesystem.getDirectoryItems(Game.dir)
 
     if #self.games ~= 0 then
@@ -58,43 +59,49 @@ function Launcher:getGames()
             self.arrowIcon = drawing.loadImage("arrow.png")
         end
 
-        self:loadGamesOnscreen()
+        self:getGamesOnscreen()
     end
 end
 
 --- Draw callback
-function Launcher:draw()
-    drawing.setup()
+function launcher:draw()
+    drawing:setup()
 
-    love.graphics.draw(self.settingsIcon, 544, 32) -- TODO: more icons like this
+    -- TODO: more icons like this, programatically drawn to remove magic number
+    love.graphics.draw(self.settingsIcon, 544, drawing.marginSize)
 
     -- Draw the games (or indicate no games)
     if self.noGames then
         local text = "No games"
         love.graphics.print(
             text,
-            (utils.screenWidth - drawing.font:getWidth(text)) / 2, 148
+            (drawing.screenWidth - drawing.font:getWidth(text)) / 2,
+            (drawing.screenHeight - drawing.font:getHeight()) / 2
         )
     else
+        -- TODO: delete this and make a proper carousel
         if self.scrollable then
             love.graphics.draw(self.arrowIcon,   8, 64)
             love.graphics.draw(self.arrowIcon, 312, 64, 0, -1, 1)
         end
 
         for game, i in self:gamesOnscreen() do
-            local gameX = 32 + 96 * i
+            local gameX = (self.gameIconSize + drawing.gapSize) * i + drawing.marginSize
+            local gameY = (drawing.screenHeight - self.gameIconSize) / 2
             love.graphics.draw(
                 game.launcherIcon,
-                gameX, 104,
+                gameX, gameY,
                 0,
-                64 / game.launcherIcon:getWidth(),
-                64 / game.launcherIcon:getHeight()
+                self.gameIconSize / game.launcherIcon:getWidth(),
+                self.gameIconSize / game.launcherIcon:getHeight()
             )
+            -- FIXME: not adjusted to screen size
             love.graphics.printf(game.title, gameX, 176, 64, "center")
         end
     end
 
     -- Draw the selection indicator
+    -- FIXME: not adjusted to screen size
     love.graphics.setColor(drawing.color.accent)
     if self.settingsSelected then
         love.graphics.draw(self.selectIcon, 232, 20)
@@ -108,7 +115,7 @@ end
 
 --- Key pressed callback
 --- @param key love.KeyConstant Character of the pressed key
-function Launcher:keypressed(key)
+function launcher:keypressed(key)
     if self.settingsSelected then
         if key == "space" then
             -- TODO: open settings
@@ -128,7 +135,7 @@ function Launcher:keypressed(key)
         if self.gameSelected > #self.games then
             self.gameSelected = 1
         end
-        self:loadGamesOnscreen()
+        self:getGamesOnscreen()
         return
     end
 
@@ -137,7 +144,7 @@ function Launcher:keypressed(key)
         if self.gameSelected < 1 then
             self.gameSelected = #self.games
         end
-        self:loadGamesOnscreen()
+        self:getGamesOnscreen()
         return
     end
 
@@ -146,5 +153,5 @@ function Launcher:keypressed(key)
     end
 end
 
-Launcher:getGames()
-return Launcher
+launcher:getGames()
+return launcher
