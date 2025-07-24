@@ -3,14 +3,23 @@
 local drawing = require("lib.drawing")
 local Game = require("lib.game")
 
+local gameSize = 128
+local gameY = (drawing.screenHeight - gameSize) / 2
+local selectGap = drawing.gapSize / 2
+local selectY = gameY - selectGap
+local selectSize = gameSize + drawing.gapSize
+local settingsIcon = drawing.loadImage("settings.png")
+local settingsWidth, settingsHeight = settingsIcon:getDimensions()
+local settingsY = drawing.marginSize + selectGap
+local settingsX = drawing.screenWidth - settingsY - settingsWidth
+
+--local selectIcon = drawing.loadImage("select.png")
+
 local launcher = {
     noGames = true, -- Is set to false if launcher:getGames() loads any games
     scrollable = false, -- Set to true if launcher:getGames() loads > 3 games
     settingsSelected = true,
     gameSelected = 1,
-    gameIconSize = 128,
-    settingsIcon = drawing.loadImage("settings.png"),
-    selectIcon = drawing.loadImage("select.png")
 }
 
 --- @package
@@ -19,7 +28,7 @@ local launcher = {
 --- @return function
 function launcher:gamesOnscreen()
     -- TODO: delete this and make a proper carousel
-    local firstGameIdx = self.gameSelected > 2 and self.gameSelected - 2 or 1
+    local firstGameIdx = self.gameSelected > 3 and self.gameSelected - 3 or 1
     local i = -1
     return function()
         i = i + 1
@@ -54,7 +63,7 @@ function launcher:getGames()
     if #self.games ~= 0 then
         self.noGames = false
         self.settingsSelected = false
-        if #self.games > 3 then
+        if #self.games > 4 then
             self.scrollable = true
             self.arrowIcon = drawing.loadImage("arrow.png")
         end
@@ -67,8 +76,8 @@ end
 function launcher:draw()
     drawing:setup()
 
-    -- TODO: more icons like this, programatically drawn to remove magic number
-    love.graphics.draw(self.settingsIcon, 544, drawing.marginSize)
+    -- TODO: more icons like this
+    love.graphics.draw(settingsIcon, settingsX, settingsY)
 
     -- Draw the games (or indicate no games)
     if self.noGames then
@@ -86,14 +95,13 @@ function launcher:draw()
         end
 
         for game, i in self:gamesOnscreen() do
-            local gameX = (self.gameIconSize + drawing.gapSize) * i + drawing.marginSize
-            local gameY = (drawing.screenHeight - self.gameIconSize) / 2
+            local gameX = selectSize * i + drawing.marginSize
             love.graphics.draw(
                 game.launcherIcon,
                 gameX, gameY,
                 0,
-                self.gameIconSize / game.launcherIcon:getWidth(),
-                self.gameIconSize / game.launcherIcon:getHeight()
+                gameSize / game.launcherIcon:getWidth(),
+                gameSize / game.launcherIcon:getHeight()
             )
             -- FIXME: not adjusted to screen size
             love.graphics.printf(game.title, gameX, 176, 64, "center")
@@ -104,12 +112,22 @@ function launcher:draw()
     -- FIXME: not adjusted to screen size
     love.graphics.setColor(drawing.color.accent)
     if self.settingsSelected then
-        love.graphics.draw(self.selectIcon, 232, 20)
-        love.graphics.rectangle("line", 270, 14, 36, 36)
+        --love.graphics.draw(selectIcon, 232, 20)
+        love.graphics.rectangle(
+            "line",
+            settingsX - selectGap, settingsY - selectGap,
+            settingsWidth + drawing.gapSize, settingsHeight + drawing.gapSize
+        )
     else
-        local selectIdx = self.gameSelected > 2 and 2 or self.gameSelected - 1
-        love.graphics.draw(self.selectIcon, 52 + 96 * selectIdx, 64)
-        love.graphics.rectangle("line", 30 + 96 * selectIdx, 102, 68, 68)
+        local selectIdx = self.gameSelected > 3 and 3 or self.gameSelected - 1
+        local selectX = drawing.marginSize + selectSize * selectIdx - selectGap
+
+        --love.graphics.draw(selectIcon, 52 + 96 * selectIdx, 64)
+        love.graphics.rectangle(
+            "line",
+            selectX, selectY,
+            selectSize, selectSize
+        )
     end
 end
 
