@@ -13,7 +13,7 @@ function love.load(_)
     love.graphics.setDefaultFilter("nearest")
 
     normalCallbacks = Callbacks:getCurrent()
-    Launcher:getGames()
+    Launcher:setup()
 end
 
 function love.draw()
@@ -24,10 +24,8 @@ function love.draw()
 end
 
 function love.keypressed(...)
-    Launcher:keypressed(...)
-
     -- Keypress could have triggered launcher to launch a game
-    local game = Launcher.launchedGame
+    local game = Launcher:keypressed(...)
     if game ~= nil then
         love.graphics.reset()
         Callbacks.default:apply()

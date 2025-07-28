@@ -4,72 +4,51 @@ local drawing = require("lib.drawing")
 local Game = require("lib.game")
 
 local gameSize = 128
+local gameX = drawing.marginSize
 local gameY = (drawing.screenHeight - gameSize) / 2
+local gamesPerScreen = 4
+local games
+local gamesCanvas
+
 local selectGap = drawing.gapSize / 2
 local selectY = gameY - selectGap
 local selectSize = gameSize + drawing.gapSize
+local selectIdx = 1
+
 local settingsIcon = drawing.loadImage("settings.png")
 local settingsWidth, settingsHeight = settingsIcon:getDimensions()
 local settingsY = drawing.marginSize + selectGap
 local settingsX = drawing.screenWidth - settingsY - settingsWidth
 
---local selectIcon = drawing.loadImage("select.png")
+local selectedSettings = true
+local selectedGame = 1
 
-local launcher = {
-    noGames = true, -- Is set to false if launcher:getGames() loads any games
-    scrollable = false, -- Set to true if launcher:getGames() loads > 3 games
-    settingsSelected = true,
-    gameSelected = 1,
-}
+local launcher = {}
 
---- @package
---- Iierator over each game currently on screen,
---- giving game, index (0-2) and index (total in list)
---- @return function
-function launcher:gamesOnscreen()
-    -- TODO: delete this and make a proper carousel
-    local firstGameIdx = self.gameSelected > 3 and self.gameSelected - 3 or 1
-    local i = -1
-    return function()
-        i = i + 1
-
-        if i == 4 then return nil end
-
-        local idx = firstGameIdx + i
-        local game = self.games[idx]
-        if game == nil then return nil end
-
-        return self.games[idx], i, idx
-    end
-end
-
---- @package
---- Load the games currently on screen, if they are not already loaded
-function launcher:getGamesOnscreen()
-    -- TODO: stop lazy-loading, better to have slow startup than lag
-    for game, _, i in self:gamesOnscreen() do
-        if type(game) == "string" then
-            self.games[i] = Game:new(game)
-        end
-    end
-end
-
---- Gets and stores the game filenames, loading the first three
+--- Gets and stores the games, draws them to a canvas
 --- Must be called before launcher:draw()
-function launcher:getGames()
-    -- TODO: stop lazy-loading, better to have slow startup than lag
-    self.games = love.filesystem.getDirectoryItems(Game.dir)
+function launcher:setup()
+    games = love.filesystem.getDirectoryItems(Game.dir)
+    if #games == 0 then return end
 
-    if #self.games ~= 0 then
-        self.noGames = false
-        self.settingsSelected = false
-        if #self.games > 4 then
-            self.scrollable = true
-            self.arrowIcon = drawing.loadImage("arrow.png")
-        end
-
-        self:getGamesOnscreen()
+    selectedSettings = false
+    gamesCanvas = love.graphics.newCanvas(
+        #games * selectSize,
+        gameSize
+    )
+    love.graphics.setCanvas(gamesCanvas)
+    for i, gameName in ipairs(games) do
+        local game = Game:new(gameName)
+        games[i] = game
+        love.graphics.draw(
+            game.launcherIcon,
+            selectSize * (i - 1), 0,
+            0,
+            gameSize / game.launcherIcon:getWidth(),
+            gameSize / game.launcherIcon:getHeight()
+        )
     end
+    love.graphics.setCanvas()
 end
 
 --- Draw callback
@@ -80,53 +59,37 @@ function launcher:draw()
     love.graphics.draw(settingsIcon, settingsX, settingsY)
 
     -- Draw the games (or indicate no games)
-    if self.noGames then
+    if #games > 0 then
+        love.graphics.draw(gamesCanvas, gameX, gameY)
+    else
         local text = "No games"
         love.graphics.print(
             text,
             (drawing.screenWidth - drawing.font:getWidth(text)) / 2,
             (drawing.screenHeight - drawing.font:getHeight()) / 2
         )
-    else
-        -- TODO: delete this and make a proper carousel
-        if self.scrollable then
-            love.graphics.draw(self.arrowIcon,   8, 64)
-            love.graphics.draw(self.arrowIcon, 312, 64, 0, -1, 1)
-        end
-
-        for game, i in self:gamesOnscreen() do
-            local gameX = selectSize * i + drawing.marginSize
-            love.graphics.draw(
-                game.launcherIcon,
-                gameX, gameY,
-                0,
-                gameSize / game.launcherIcon:getWidth(),
-                gameSize / game.launcherIcon:getHeight()
-            )
-            -- FIXME: not adjusted to screen size
-            love.graphics.printf(game.title, gameX, 176, 64, "center")
-        end
     end
 
     -- Draw the selection indicator
-    -- FIXME: not adjusted to screen size
     love.graphics.setColor(drawing.color.accent)
-    if self.settingsSelected then
-        --love.graphics.draw(selectIcon, 232, 20)
+    if selectedSettings then
         love.graphics.rectangle(
             "line",
             settingsX - selectGap, settingsY - selectGap,
             settingsWidth + drawing.gapSize, settingsHeight + drawing.gapSize
         )
     else
-        local selectIdx = self.gameSelected > 3 and 3 or self.gameSelected - 1
-        local selectX = drawing.marginSize + selectSize * selectIdx - selectGap
-
-        --love.graphics.draw(selectIcon, 52 + 96 * selectIdx, 64)
+        local offset = drawing.marginSize - selectGap
+        local selectX = offset + selectSize * (selectIdx - 1)
         love.graphics.rectangle(
             "line",
             selectX, selectY,
             selectSize, selectSize
+        )
+        love.graphics.printf(
+            games[selectedGame].title,
+            selectX, gameY + selectSize,
+            gameSize, "center"
         )
     end
 end
@@ -134,42 +97,47 @@ end
 --- Key pressed callback
 --- @param key love.KeyConstant Character of the pressed key
 function launcher:keypressed(key)
-    if self.settingsSelected then
+    if selectedSettings then
         if key == "space" then
             -- TODO: open settings
         else
-            self.settingsSelected = false
+            selectedSettings = false
         end
         return
     end
 
     if key == "up" or key == "down" then -- Select settings
-        self.settingsSelected = true
+        selectedSettings = true
         return
     end
 
     if key == "right" then -- Select next game
-        self.gameSelected = self.gameSelected + 1
-        if self.gameSelected > #self.games then
-            self.gameSelected = 1
+        if selectedGame < #games then
+            selectedGame = selectedGame + 1
+            if selectIdx < gamesPerScreen then
+                selectIdx = selectIdx + 1
+            else
+                gameX = gameX - selectSize
+            end
         end
-        self:getGamesOnscreen()
         return
     end
 
     if key == "left" then -- Select previous game
-        self.gameSelected = self.gameSelected - 1
-        if self.gameSelected < 1 then
-            self.gameSelected = #self.games
+        if selectedGame > 1 then
+            selectedGame = selectedGame - 1
+            if selectIdx > 1 then
+                selectIdx = selectIdx - 1
+            else
+                gameX = gameX + selectSize
+            end
         end
-        self:getGamesOnscreen()
         return
     end
 
     if key == "space" then -- Launch the game (handled by main.lua)
-        self.launchedGame = self.games[self.gameSelected]
+        return games[selectedGame]
     end
 end
 
-launcher:getGames()
 return launcher
