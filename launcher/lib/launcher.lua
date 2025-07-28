@@ -89,7 +89,7 @@ function launcher:draw()
         love.graphics.printf(
             games[selectedGame].title,
             selectX, gameY + selectSize,
-            gameSize, "center"
+            selectSize, "center"
         )
     end
 end
