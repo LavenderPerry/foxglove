@@ -27,7 +27,7 @@ local launcher = {}
 
 --- Gets and stores the games, draws them to a canvas
 --- Must be called before launcher:draw()
-function launcher:setup()
+function launcher.setup()
     games = love.filesystem.getDirectoryItems(Game.dir)
     if #games == 0 then return end
 
@@ -52,7 +52,7 @@ function launcher:setup()
 end
 
 --- Draw callback
-function launcher:draw()
+function launcher.draw()
     drawing:setup()
 
     -- TODO: more icons like this
@@ -96,7 +96,7 @@ end
 
 --- Key pressed callback
 --- @param key love.KeyConstant Character of the pressed key
-function launcher:keypressed(key)
+function launcher.keypressed(key)
     if selectedSettings then
         if key == "space" then
             -- TODO: open settings
@@ -135,8 +135,8 @@ function launcher:keypressed(key)
         return
     end
 
-    if key == "space" then -- Launch the game (handled by main.lua)
-        return games[selectedGame]
+    if key == "space" then -- Launch the game
+        games[selectedGame]:launch()
     end
 end
 
