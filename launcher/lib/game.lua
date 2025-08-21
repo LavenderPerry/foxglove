@@ -5,12 +5,11 @@ local drawing = require("lib.drawing")
 
 --- @class Game
 --- @field title string
---- @field filepath string
---- @field fullpath string
---- @field identity string | nil
+--- @field filename string
 local Game = {
     dir = "Games",
     iconDir = "Icons",
+    modDir = "Mods",
     launcherIcon = drawing.loadImage("gameIconFallback.png") -- Default
 }
 
@@ -19,12 +18,9 @@ local Game = {
 --- @param filename string The filename of the game
 --- @return Game
 function Game:new(filename)
-    local gamepath = path.join(self.dir, filename)
-
     local res = {
         title = filename,
-        filepath = gamepath,
-        fullpath = path.join(path.saveDirectory, gamepath),
+        filename = filename
     }
 
     setmetatable(res, self)
@@ -42,8 +38,13 @@ end
 --- Launches the game by performing a restart with specific parameters
 --- This only works on Foxglove's specific fork of LÖVE
 function Game:launch()
+    local mods = love.filesystem.getDirectoryItems(
+        path.full(self.modDir, self.title, "active")
+    )
+
     love.event.restart({
-        foxglove_launch_game = self.fullpath,
+        foxglove_launch_game = path.full(self.dir, self.filename),
+        foxglove_mods = #mods > 0 and mods or nil,
         foxglove_replace_restartval = true
     })
 end
