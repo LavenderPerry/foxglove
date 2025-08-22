@@ -19,7 +19,7 @@ local Game = {
 --- @return Game
 function Game:new(filename)
     local res = {
-        title = filename,
+        title = filename:match("^([^%.]+)"),
         filename = filename
     }
 
