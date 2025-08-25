@@ -38,13 +38,15 @@ end
 --- Launches the game by performing a restart with specific parameters
 --- This only works on Foxglove's specific fork of LÖVE
 function Game:launch()
-    local mods = love.filesystem.getDirectoryItems(
-        path.full(self.modDir, self.title, "active")
-    )
+    local mod_dir = path.join(self.modDir, self.title, "active")
+    local mods = love.filesystem.getDirectoryItems(mod_dir)
+    for i, mod in ipairs(mods) do
+        mods[i] = path.full(mod_dir, mod)
+    end
 
     love.event.restart({
         foxglove_launch_game = path.full(self.dir, self.filename),
-        foxglove_mods = #mods > 0 and mods or nil,
+        foxglove_mods = mods,
         foxglove_replace_restartval = true
     })
 end
