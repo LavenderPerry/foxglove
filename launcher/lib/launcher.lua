@@ -26,7 +26,7 @@ local selectedGame = 1
 local launcher = {}
 
 --- Gets and stores the games, draws them to a canvas
---- Must be called before launcher:draw()
+--- Must be called before launcher.draw()
 function launcher.setup()
     games = love.filesystem.getDirectoryItems(Game.dir)
     if #games == 0 then return end
@@ -51,6 +51,11 @@ function launcher.setup()
     love.graphics.setCanvas()
 end
 
+--- Returns the selected game
+function launcher.selectedGame()
+    return games[selectIdx]
+end
+
 --- Draw callback
 function launcher.draw()
     drawing:setup()
@@ -62,12 +67,7 @@ function launcher.draw()
     if #games > 0 then
         love.graphics.draw(gamesCanvas, gameX, gameY)
     else
-        local text = "No games"
-        love.graphics.print(
-            text,
-            (drawing.screenWidth - drawing.font:getWidth(text)) / 2,
-            (drawing.screenHeight - drawing.font:getHeight()) / 2
-        )
+        drawing.printCenter("No games")
     end
 
     -- Draw the selection indicator

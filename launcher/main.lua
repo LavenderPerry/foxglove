@@ -1,12 +1,11 @@
 -- LÖVE functions
 
--- TODO: the things changed via monkeypatching should be changed in the LÖVE fork instead
---require("lib.monkeypatch")
-
-local launcher = require("lib.launcher")
 local drawing = require("lib.drawing")
+local launcher = require("lib.launcher")
+local installer = require("lib.installer")
 
-local normalCallbacks
+local droppedFile
+local droppedPath
 
 function love.load(_)
     love.mouse.setVisible(false)
@@ -16,9 +15,18 @@ end
 
 function love.draw()
     drawing:setup()
-
-    -- TODO: handling for multiple screens
     launcher.draw()
+    installer.draw()
 end
 
-love.keypressed = launcher.keypressed
+function love.filedropped(file)
+    installer.init(launcher.selectedGame(), file:getFilename(), file)
+end
+
+function love.directorydropped(dir)
+    installer.init(launcher.selectedGame(), dir)
+end
+
+function love.keypressed(key)
+    return installer.keypressed(key) and launcher.keypressed(key)
+end

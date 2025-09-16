@@ -43,4 +43,15 @@ function drawing.loadImage(filename)
     return love.graphics.newImage(drawing.imagePath .. filename)
 end
 
+--- Prints the given text centered on the screen
+--- @param text string The text to print
+--- @param y number | nil The y coordinate (vertically centered if nil)
+function drawing.printCenter(text, y)
+    love.graphics.print(
+        text,
+        (drawing.screenWidth - drawing.font:getWidth(text)) / 2,
+        y or (drawing.screenHeight - drawing.font:getHeight()) / 2
+    )
+end
+
 return drawing

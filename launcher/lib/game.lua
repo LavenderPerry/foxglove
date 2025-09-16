@@ -22,6 +22,7 @@ function Game:new(filename)
         title = filename:match("^([^%.]+)"),
         filename = filename
     }
+    res.active_mods = path.join(self.modDir, self.title, "active")
 
     setmetatable(res, self)
     self.__index = self
@@ -38,8 +39,7 @@ end
 --- Launches the game by performing a restart with specific parameters
 --- This only works on Foxglove's specific fork of LÖVE
 function Game:launch()
-    local mod_dir = path.join(self.modDir, self.title, "active")
-    local mods = love.filesystem.getDirectoryItems(mod_dir)
+    local mods = love.filesystem.getDirectoryItems(self.active_mods)
     for i, mod in ipairs(mods) do
         mods[i] = path.full(mod_dir, mod)
     end
