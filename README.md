@@ -1,9 +1,7 @@
 # Foxglove Video Game Launcher
 
-This is a game launcher for an in-progress handheld game console
-currently named Foxglove.
-
-It runs on the [LÖVE](https://love2d.org) framework and can launch LÖVE games.
+This is a game launcher for the [LÖVE](https://love2d.org) framework.
+It can launch and mod LÖVE games (compatability may vary).
 
 This only works with [my fork of LÖVE](https://github.com/LavenderPerry/love)!
 Do not try to run it with default LÖVE, it will not work.
