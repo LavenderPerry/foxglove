@@ -1,6 +1,7 @@
--- Main launcher menu
+-- Main launcher screen
 
 local drawing = require("lib.drawing")
+local screen = require("lib.screen")
 local Game = require("lib.game")
 
 local gameSize = 128
@@ -10,17 +11,16 @@ local gamesPerScreen = 4
 local games
 local gamesCanvas
 
-local selectGap = drawing.gapSize / 2
-local selectY = gameY - selectGap
+local selectY = gameY - drawing.selectGap
 local selectSize = gameSize + drawing.gapSize
 local selectIdx = 1
 
-local settingsIcon = drawing.loadImage("settings.png")
-local settingsWidth, settingsHeight = settingsIcon:getDimensions()
-local settingsY = drawing.marginSize + selectGap
-local settingsX = drawing.screenWidth - settingsY - settingsWidth
+local onlineIcon = drawing.loadImage("online.png")
+local onlineWidth, onlineHeight = onlineIcon:getDimensions()
+local onlineY = drawing.marginSize + drawing.selectGap
+local onlineX = drawing.screenWidth - onlineY - onlineWidth
 
-local selectedSettings = true
+local selectedOnline = true
 local selectedGame = 1
 
 local launcher = {}
@@ -31,7 +31,7 @@ function launcher.setup()
     games = love.filesystem.getDirectoryItems(Game.dir)
     if #games == 0 then return end
 
-    selectedSettings = false
+    selectedOnline = false
     gamesCanvas = love.graphics.newCanvas(
         #games * selectSize,
         gameSize
@@ -58,10 +58,8 @@ end
 
 --- Draw callback
 function launcher.draw()
-    drawing:setup()
-
     -- TODO: more icons like this
-    love.graphics.draw(settingsIcon, settingsX, settingsY)
+    love.graphics.draw(onlineIcon, onlineX, onlineY)
 
     -- Draw the games (or indicate no games)
     if #games > 0 then
@@ -72,14 +70,14 @@ function launcher.draw()
 
     -- Draw the selection indicator
     love.graphics.setColor(drawing.color.accent)
-    if selectedSettings then
+    if selectedOnline then
         love.graphics.rectangle(
             "line",
-            settingsX - selectGap, settingsY - selectGap,
-            settingsWidth + drawing.gapSize, settingsHeight + drawing.gapSize
+            onlineX - drawing.selectGap, onlineY - drawing.selectGap,
+            onlineWidth + drawing.gapSize, onlineHeight + drawing.gapSize
         )
     else
-        local offset = drawing.marginSize - selectGap
+        local offset = drawing.marginSize - drawing.selectGap
         local selectX = offset + selectSize * (selectIdx - 1)
         love.graphics.rectangle(
             "line",
@@ -92,22 +90,23 @@ function launcher.draw()
             selectSize, "center"
         )
     end
+    love.graphics.setColor(drawing.color.foreground)
 end
 
 --- Key pressed callback
 --- @param key love.KeyConstant Character of the pressed key
 function launcher.keypressed(key)
-    if selectedSettings then
-        if key == "space" then
-            -- TODO: open settings
+    if selectedOnline then
+        if key == "return" then
+            screen:set("online")
         else
-            selectedSettings = false
+            selectedOnline = false
         end
         return
     end
 
-    if key == "up" or key == "down" then -- Select settings
-        selectedSettings = true
+    if key == "up" or key == "down" then -- Select online
+        selectedOnline = true
         return
     end
 
@@ -135,7 +134,7 @@ function launcher.keypressed(key)
         return
     end
 
-    if key == "space" then -- Launch the game
+    if key == "return" then -- Launch the game
         games[selectedGame]:launch()
     end
 end

@@ -22,15 +22,16 @@ local drawing = {
     imagePath = "assets/images/"
 }
 
+drawing.selectGap = drawing.gapSize / 2
+drawing.doubleMargin = drawing.marginSize * 2
+
 --- Sets the color and font for drawing, loading the font if not loaded yet
 function drawing:setup()
-    if not self.font then
-        self.font = love.graphics.newFont(
-            self.fontPath .. self.fontFile,
-            self.fontSize,
-            "mono"
-        )
-    end
+    self.font = love.graphics.newFont(
+        self.fontPath .. self.fontFile,
+        self.fontSize,
+        "mono"
+    )
 
     love.graphics.setColor(drawing.color.foreground)
     love.graphics.setFont(drawing.font)

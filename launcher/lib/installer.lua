@@ -32,18 +32,17 @@ function installer.draw()
     if not itemPath then return end
 
     love.graphics.setColor(drawing.color.background)
-    local padding = drawing.marginSize * 2
-    local sizeDiff = padding * 2
+    local sizeDiff = drawing.doubleMargin * 2
     local promptWidth = drawing.screenWidth - sizeDiff
 
     love.graphics.rectangle(
         "fill",
-        padding, padding,
+        drawing.doubleMargin, drawing.doubleMargin,
         promptWidth, drawing.screenHeight - sizeDiff
     )
     love.graphics.setColor(drawing.color.foreground)
 
-    local contentPadding = padding + drawing.marginSize
+    local contentPadding = drawing.doubleMargin + drawing.marginSize
     local textOffset = drawing.font:getHeight() + drawing.gapSize
     local itemPathY = contentPadding + textOffset
 
@@ -59,9 +58,9 @@ function installer.draw()
         )
     )
 
-    local contentWidth = promptWidth - padding
+    local contentWidth = promptWidth - drawing.doubleMargin
     local halfScreen = contentWidth / 2
-    local buttonWidth = halfScreen - drawing.gapSize / 2
+    local buttonWidth = halfScreen - drawing.selectGap
     local buttonY = noteY + doubleText
     love.graphics.setColor(drawing.color[isMod and "foreground" or "accent"])
     love.graphics.rectangle(
@@ -106,7 +105,7 @@ function installer.keypressed(key)
         return
     end
 
-    if key == "space" then
+    if key == "return" then
         local copyTo = path.join(
             isMod and currentGame.active_mods or currentGame.dir,
             itemPath:match("[^/]*$")
