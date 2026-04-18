@@ -22,6 +22,7 @@ love.filesystem.setCRequirePath(table.concat({
 local drawing = require("lib.drawing")
 local installer = require("lib.installer")
 local screen = require("lib.screen")
+local launcher
 
 function love.load(_)
     love.mouse.setVisible(false)
@@ -29,6 +30,7 @@ function love.load(_)
     love.graphics.setDefaultFilter("nearest")
     drawing:setup()
     screen:set("launcher")
+	launcher = screen.current
 end
 
 function love.draw()

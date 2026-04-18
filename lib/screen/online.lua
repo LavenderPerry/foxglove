@@ -124,11 +124,13 @@ local function loadXmlToGames(xml)
 end
 
 local function updateGames()
+	love.filesystem.write(games_cache, "uwu")
     if games_headers == nil then getBrowserHeaders() end
 
     local code, body = https.request(games_url, { headers = games_headers })
     if code ~= 200 then
-        print(string.format("ERROR: %s responded with %d", games_url, code))
+		print(body)
+        print(string.format("ERROR: %s responded with %d", games_url, code or 0))
         return
     end
 
@@ -246,7 +248,7 @@ function online.keypressed(key)
     end
 
     if key == "down" then
-        if selectRow < lastColumnRows or 
+        if selectRow < lastColumnRows or
            selectColumn < columnAmount and selectRow < gamesPerColumn then
             selectRow = selectRow + 1
         else

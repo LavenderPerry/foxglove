@@ -116,8 +116,6 @@ end
 The directory name does not currently matter, but may be used to refer to your
 mod in the future.
 
--- TODO: describe mod structure
-
 ## Credits / Assets Used
 
 * Font: [m6x11](https://managore.itch.io/m6x11) by Daniel Linssen

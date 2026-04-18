@@ -4,7 +4,7 @@ Accept: application/xml;q=0.9,*/*;q=0.8
 Accept-Language: en-US,en;q=0.5
 Sec-GPC: 1
 Connection: keep-alive
-Cookie: cf_clearance=xYGAr3bU11slITSciIlwYMF2UhEAiW_olBUBWcH78Eo-1765426161-1.2.1.1-UQS4YMRqcZMJBOTHOT1viadxvnFCE_QDPu0NH6vdlgyuyzUWe9.w_WrLUQC73TSk4y3KuQug_lpKZSvxqd2.dSxUK7OMV5P25DdCDGzT.vwY9B7_DjAG15SyvacurYGVyuZrMz.ummpJOu9.0C9E2j2OkYJg48vqXy99lvSOzyWp4gYSgzwxWqmK5.CrgvGL5gihH36wfRPJDL_8mCCvVzkOJOsvp6A5yZGnDhNoEhg; itchio_token=WyJDS1F2IiwxNzY1NDI2MTYxLCIyMjE5YlVFNFRpZ3loWTMiXQ%3d%3d%2eSJP5ip1wxRUMHNBbScCwlFyZ%2bSY%3d
+Cookie: itchio_token=WyJDS1F2IiwxNzY1NDI2MTYxLCIyMjE5YlVFNFRpZ3loWTMiXQ%3d%3d%2eSJP5ip1wxRUMHNBbScCwlFyZ%2bSY%3d
 Upgrade-Insecure-Requests: 1
 Sec-Fetch-Dest: document
 Sec-Fetch-Mode: navigate

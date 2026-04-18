@@ -100,7 +100,7 @@ function launcher.keypressed(key)
         if key == "return" then
             screen:set("online")
         else
-            selectedOnline = false
+            selectedOnline = #games == 0
         end
         return
     end

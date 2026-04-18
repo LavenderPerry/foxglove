@@ -3,6 +3,8 @@
 local drawing = require("lib.drawing")
 local path = require("lib.path")
 
+local Game = require("lib.game")
+
 --local isDir
 
 local isMod = false
@@ -106,15 +108,24 @@ function installer.keypressed(key)
     end
 
     if key == "return" then
-        local copyTo = path.join(
-            isMod and currentGame.active_mods or currentGame.dir,
-            itemPath:match("[^/]*$")
-        )
+		local copyTo
+
+		if isMod then
+			copyTo = currentGame and currentGame.active_mods or path.join(Game.modDir, "__unknown_game__")
+		else
+			copyTo = Game.dir
+		end
+		love.filesystem.createDirectory(copyTo)
+		copyTo = path.join(copyTo, itemPath:match("[^/]*$"))
+
         if itemFile then
             itemFile:open("r")
             love.filesystem.write(copyTo, itemFile:read())
             itemFile = nil
         else
+			local itemMount = "__install_temporary__"
+			love.filesystem.mount(itemPath, itemMount)
+
             local function copyDir(dir, dest)
                 love.filesystem.createDirectory(dest)
                 for _, child in ipairs(love.filesystem.getDirectoryItems(dir)) do
@@ -130,7 +141,9 @@ function installer.keypressed(key)
                     end
                 end
             end
-            copyDir(itemPath, copyTo)
+            copyDir(itemMount, copyTo)
+
+			love.filesystem.unmount(itemPath)
         end
         itemPath = nil
     end
